@@ -1,0 +1,119 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ecotrack-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3307/ecotrack_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+# ============================================================================
+# JWT & CORS SECURITY CONFIGURATION
+# ============================================================================
+app:
+  jwt:
+    # 512-bit Base64-compatible secret key for HMAC-SHA256 / SHA384 signing
+    secret: ${JWT_SECRET:EcoTrackSuperSecretKeyForPersonalCarbonFootprintTrackerJwtSigning2026SecureTokenKey9876543210}
+    expiration-ms: 86400000 # 24 hours
+  cors:
+    allowed-origins: "http://localhost:5173,http://localhost:3000"
+
+# ============================================================================
+# CENTRALIZED EMISSION ENGINE CONFIGURATION (CO2 = Quantity * Factor)
+# All factors represent kg CO2 per unit unless specified otherwise
+# ============================================================================
+ecotrack:
+  # Tree Equivalent & Score Baselines
+  constants:
+    tree-absorption-kg-per-year: 21.77
+    daily-target-co2-kg: 6.5
+    monthly-default-budget-kg: 250.0
+
+  # Transport Emission Factors (kg CO2 per km)
+  transport-factors:
+    WALKING: 0.0
+    CYCLING: 0.0
+    E_BIKE: 0.015
+    TWO_WHEELER: 0.072
+    CAR_PETROL: 0.192
+    CAR_DIESEL: 0.171
+    CAR_CNG: 0.132
+    CAR_HYBRID: 0.109
+    CAR_EV: 0.053
+    BUS: 0.082
+    METRO: 0.028
+    TRAIN: 0.035
+    FLIGHT: 0.255
+
+  # Fuel Direct Conversion Factors (kg CO2 per liter / unit)
+  fuel-factors:
+    PETROL: 2.31
+    DIESEL: 2.68
+    CNG: 2.02
+    ELECTRIC: 0.71 # per kWh grid average
+    HYBRID: 1.65
+    NONE: 0.0
+
+  # Air Pollutant Factors (grams per km for transport modes)
+  pollutant-factors:
+    pm25-g-per-km:
+      CAR_PETROL: 0.018
+      CAR_DIESEL: 0.045
+      TWO_WHEELER: 0.022
+      BUS: 0.030
+      CAR_EV: 0.004
+      DEFAULT: 0.005
+    nox-g-per-km:
+      CAR_PETROL: 0.120
+      CAR_DIESEL: 0.480
+      TWO_WHEELER: 0.095
+      BUS: 0.350
+      CAR_EV: 0.0
+      DEFAULT: 0.020
+    co-g-per-km:
+      CAR_PETROL: 0.850
+      CAR_DIESEL: 0.320
+      TWO_WHEELER: 1.150
+      BUS: 0.410
+      CAR_EV: 0.0
+      DEFAULT: 0.050
+
+  # Daily Activity Factors (kg CO2 per unit)
+  activity-factors:
+    # ELECTRICITY (per kWh or hour)
+    GRID_ELECTRICITY_KWH: 0.71
+    AC_USAGE_HOURS: 1.15
+    SOLAR_ENERGY_KWH: 0.04
+    HEATER_HOURS: 1.40
+    # FOOD (per meal)
+    RED_MEAT_MEAL: 3.30
+    POULTRY_MEAL: 1.25
+    VEGETARIAN_MEAL: 0.65
+    VEGAN_MEAL: 0.42
+    DAIRY_SERVING: 0.55
+    # WASTE (per kg)
+    LANDFILL_WASTE_KG: 0.58
+    PLASTIC_WASTE_KG: 1.85
+    RECYCLED_WASTE_KG: 0.12
+    COMPOSTED_WASTE_KG: 0.05
+    # WATER (per 100 liters or liter)
+    WATER_LITERS: 0.0015
+    HOT_SHOWER_MINUTES: 0.18
+    # LIFESTYLE (per item/unit)
+    FAST_FASHION_ITEM: 8.50
+    ELECTRONICS_PURCHASE: 35.0
+    SECOND_HAND_ITEM: 0.90
+    REUSABLE_BAG_USED: 0.01
